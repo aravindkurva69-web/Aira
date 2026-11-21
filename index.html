@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080b18">
+<title>Aira - AI Assistant</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;min-height:100vh;background:#080b18;color:white;
+ font-family:Arial,sans-serif;display:flex;justify-content:center;
+ align-items:center;text-align:center;padding:20px;
+}
+.app{width:100%;max-width:430px}
+h1{font-size:38px;margin:10px}
+.sub{color:#a9b3d0}
+.orb{
+ width:190px;height:190px;margin:40px auto 25px;
+ border-radius:50%;
+ background:radial-gradient(circle at 35% 30%,#b9c9ff,#7255ee 40%,#171c50 75%);
+ box-shadow:0 0 35px #765cff,0 0 90px #392b9b;
+ display:flex;align-items:center;justify-content:center;
+ font-size:65px;transition:.3s;
+}
+.orb.listening{animation:pulse 1s infinite}
+@keyframes pulse{
+ 50%{transform:scale(1.09);box-shadow:0 0 70px #a58aff}
+}
+select,button{
+ width:100%;padding:15px;margin:8px 0;border:0;
+ border-radius:14px;font-size:16px;
+}
+select{background:#202641;color:white}
+button{background:#7559f5;color:white;font-weight:bold}
+button.secondary{background:#252d49}
+#status{color:#b5a8ff;min-height:25px}
+#reply{
+ background:#171d33;padding:18px;border-radius:16px;
+ min-height:65px;line-height:1.5;margin-top:15px;
+}
+</style>
+</head>
+<body>
+<div class="app">
+ <h1>✨ AIRA</h1>
+ <p class="sub">Your Personal AI Voice Assistant</p>
+
+ <div class="orb" id="orb">✦</div>
+
+ <p id="status">Hello! I'm Aira. How can I help?</p>
+
+ <select id="language">
+  <option value="en-IN">English</option>
+  <option value="hi-IN">हिन्दी (Hindi)</option>
+  <option value="te-IN">తెలుగు (Telugu)</option>
+ </select>
+
+ <button onclick="listen()">🎙️ TAP TO TALK</button>
+ <button class="secondary" onclick="greet()">SPEAK TO AIRA</button>
+
+ <div id="reply">Your conversation will appear here.</div>
+</div>
+
+<script>
+const statusText=document.getElementById("status");
+const reply=document.getElementById("reply");
+const orb=document.getElementById("orb");
+const language=document.getElementById("language");
+
+function speak(text){
+ window.speechSynthesis.cancel();
+ const voice=new SpeechSynthesisUtterance(text);
+ voice.lang=language.value;
+ voice.rate=0.95;
+ window.speechSynthesis.speak(voice);
+}
+
+function greet(){
+ let messages={
+  "en-IN":"Hello! I am Aira. How can I help you today?",
+  "hi-IN":"नमस्ते! मैं आइरा हूँ। मैं आपकी क्या मदद कर सकती हूँ?",
+  "te-IN":"నమస్కారం! నేను ఐరాను. మీకు ఎలా సహాయం చేయగలను?"
+ };
+ reply.innerText=messages[language.value];
+ speak(messages[language.value]);
+}
+
+function listen(){
+ const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+
+ if(!Recognition){
+  statusText.innerText="Voice recognition is not supported in this browser.";
+  reply.innerText="Try the latest Chrome browser or use the text feature in a future version.";
+  return;
+ }
+
+ const recognition=new Recognition();
+ recognition.lang=language.value;
+ recognition.interimResults=false;
+ recognition.maxAlternatives=1;
+
+ orb.classList.add("listening");
+ statusText.innerText="Listening... Speak now.";
+
+ recognition.onresult=function(event){
+  const words=event.results[0][0].transcript;
+  reply.innerText="You: "+words;
+  respond(words);
+ };
+
+ recognition.onerror=function(event){
+  statusText.innerText="Microphone issue: "+event.error;
+  orb.classList.remove("listening");
+ };
+
+ recognition.onend=function(){
+  orb.classList.remove("listening");
+  if(statusText.innerText==="Listening... Speak now.")
+   statusText.innerText="Ready for your next command.";
+ };
+
+ try{recognition.start();}
+ catch(error){
+  statusText.innerText="Please try again.";
+  orb.classList.remove("listening");
+ }
+}
+
+function respond(words){
+ const text=words.toLowerCase();
+ let answer="I heard you! I am still learning. Soon I will be able to help with more tasks.";
+
+ if(text.includes("hello")||text.includes("hi"))
+  answer="Hello! It's lovely to talk with you.";
+ else if(text.includes("your name")||text.includes("who are you"))
+  answer="My name is Aira, your personal assistant.";
+ else if(text.includes("time"))
+  answer="The time is "+new Date().toLocaleTimeString();
+ else if(text.includes("open youtube"))
+  answer="Opening YouTube.";
+ else if(text.includes("thank"))
+  answer="You're welcome! I'm always happy to help.";
+
+ reply.innerText="Aira: "+answer;
+ speak(answer);
+
+ if(text.includes("open youtube"))
+  window.open("https://m.youtube.com","_blank");
+}
+</script>
+</body>
+</html>
+
